@@ -51,14 +51,8 @@ Cette visualisation présente de manière interactive et accessible les menaces 
 7. **Effets en cascade** - Visualisation du parcours : écosystème → crise sécuritaire
 8. **Niveaux de confiance** - Transparence sur la certitude des évaluations
 
-### Interactions :
-
-- ✨ Cliquez sur les cartes d'écosystèmes pour les mettre en surbrillance
-- 🎨 Animations au chargement pour une présentation progressive
-- 📱 Design responsive (fonctionne sur mobile, tablette, desktop)
-
 ## 🌐 Technologies
-
+- **Claude Sonnet 4.5** - IA générative human-assisted 
 - **React 18** - Framework JavaScript
 - **Tailwind CSS** - Framework CSS (via CDN)
 - **Lucide Icons** - Icônes SVG (recréées manuellement)
@@ -68,6 +62,8 @@ Cette visualisation présente de manière interactive et accessible les menaces 
 
 Les données proviennent d'un rapport public britannique (UK OFFICIAL). 
 La visualisation est créée à des fins éducatives et de sensibilisation.
+
+
 
 ---
 
