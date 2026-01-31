@@ -5,6 +5,7 @@ Visualisation interactive des risques de sécurité nationale liés à l'effondr
 ## 📖 Source des données
 
 **Document d'origine :** UK National Security Assessment - "Global biodiversity loss, ecosystem collapse and national security" (2024)
+
 Lien vers le document : https://assets.publishing.service.gov.uk/media/696e0eae719d837d69afc7de/National_security_assessment_-_global_biodiversity_loss__ecosystem_collapse_and_national_security.pdf
 
 **Mise à jour :** Données actualisées pour 2026 (7ème limite planétaire franchie : acidification des océans)
