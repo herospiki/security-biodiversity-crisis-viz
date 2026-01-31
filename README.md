@@ -9,6 +9,7 @@ Visualisation interactive des risques de sécurité nationale liés à l'effondr
 Lien vers le document : https://assets.publishing.service.gov.uk/media/696e0eae719d837d69afc7de/National_security_assessment_-_global_biodiversity_loss__ecosystem_collapse_and_national_security.pdf
 
 **Mise à jour :** Une donnée actualisée pour 2026 (7ème limite planétaire franchie : acidification des océans)
+**Ajout personnel :** Le paradoxe des 3%
 
 ## 📊 Aperçu
 
