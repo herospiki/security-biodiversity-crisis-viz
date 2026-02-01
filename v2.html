@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crise de la Biodiversité - UK National Security Assessment</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Supprimer l'avertissement Tailwind CDN de la console
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0]?.includes?.('cdn.tailwindcss.com')) return;
+            originalWarn.apply(console, args);
+        };
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+        
+        * {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        @keyframes slide-up {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes alert-flash {
+            0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
+            50% { background-color: rgba(239, 68, 68, 0.3); }
+        }
+        
+        .animate-slide-up {
+            animation: slide-up 0.6s ease-out forwards;
+        }
+        
+        .alert-flash {
+            animation: alert-flash 2s ease-in-out infinite;
+        }
+        
+        .stat-card {
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+        }
+        
+        .ecosystem-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .ecosystem-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .timeline-marker {
+            position: relative;
+        }
+        
+        .timeline-marker::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: currentColor;
+            transform: translateY(-50%);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Icônes SVG simplifiées (remplacement de lucide-react)
+        const AlertTriangle = ({ className, style }) => (
+            <svg className={className} style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        );
+
+        const TrendingDown = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                <polyline points="17 18 23 18 23 12"/>
+            </svg>
+        );
+
+        const Skull = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="9" cy="12" r="1"/>
+                <circle cx="15" cy="12" r="1"/>
+                <path d="M8 20v2h8v-2"/>
+                <path d="M12.5 17H11.5C10.7 17 10 16.3 10 15.5V15C10 14.4 10.4 14 11 14H13C13.6 14 14 14.4 14 15V15.5C14 16.3 13.3 17 12.5 17Z"/>
+                <path d="M12 2C6.5 2 2 5.6 2 10C2 15 6 22 12 22C18 22 22 15 22 10C22 5.6 17.5 2 12 2Z"/>
+            </svg>
+        );
+
+        const Globe = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+        );
+
+        const Calendar = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+        );
+
+        const Droplet = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+        );
+
+        const Wheat = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M2 22 16 8"/>
+                <path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/>
+                <path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/>
+                <path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/>
+            </svg>
+        );
+
+        const Users = ({ className }) => (
+            <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        );
+
+        function BiodiversityCrisisViz() {
+            const [selectedEcosystem, setSelectedEcosystem] = useState(null);
+
+            const ecosystems = [
+                { 
+                    id: 'amazon', 
+                    name: 'Amazonie', 
+                    risk: 'Très élevé',
+                    deforestation: '17%',
+                    threshold: '20-25%',
+                    collapse: '2050+',
+                    color: 'from-emerald-900 to-emerald-700'
+                },
+                { 
+                    id: 'coral', 
+                    name: 'Récifs coralliens SE Asie', 
+                    risk: 'Critique',
+                    status: 'Déclin massif',
+                    collapse: '2030',
+                    color: 'from-orange-900 to-orange-600'
+                },
+                { 
+                    id: 'boreal', 
+                    name: 'Forêts boréales', 
+                    risk: 'Critique',
+                    status: 'Dégradation rapide',
+                    collapse: '2030',
+                    color: 'from-indigo-900 to-indigo-700'
+                },
+                { 
+                    id: 'congo', 
+                    name: 'Forêt du Congo', 
+                    risk: 'Élevé',
+                    status: 'Sous pression',
+                    collapse: '2050+',
+                    color: 'from-green-900 to-green-700'
+                },
+                { 
+                    id: 'himalaya', 
+                    name: 'Himalaya', 
+                    risk: 'Élevé',
+                    status: 'Glaciers en fonte',
+                    collapse: '2050+',
+                    color: 'from-slate-900 to-slate-600'
+                },
+                { 
+                    id: 'mangroves', 
+                    name: 'Mangroves', 
+                    risk: 'Très élevé',
+                    status: 'Perte accélérée',
+                    collapse: '2050+',
+                    color: 'from-teal-900 to-teal-700'
+                },
+            ];
+
+            const timeline = [
+                { year: '1970-2020', event: 'Déclin de 73% des populations animales', severity: 'critical' },
+                { year: '2022', event: 'Cadre Kunming-Montréal : objectif inverser perte biodiversité d\'ici 2030', severity: 'positive' },
+                { year: '2023', event: '6/9 limites planétaires franchies', severity: 'critical' },
+                { year: '2025', event: '7/9 limites planétaires franchies (acidification des océans)', severity: 'critical' },
+                { year: '2030', event: 'Effondrement possible : coraux, forêts boréales', severity: 'critical' },
+                { year: '2050', event: 'Effondrement possible : forêts tropicales, mangroves', severity: 'high' },
+                { year: '2050+', event: 'Dégradation continue sans intervention', severity: 'high' },
+            ];
+
+            const impacts = [
+                { icon: Droplet, label: 'Insécurité hydrique', confidence: 'Élevée' },
+                { icon: Wheat, label: 'Échecs des récoltes', confidence: 'Élevée' },
+                { icon: Users, label: 'Migrations massives', confidence: 'Modérée' },
+                { icon: AlertTriangle, label: 'Conflits géopolitiques', confidence: 'Modérée' },
+            ];
+
+            const ukStats = [
+                { label: 'Importations alimentaires', value: '40%', status: 'critical' },
+                { label: 'Autosuffisance possible', value: 'Non', status: 'critical' },
+                { label: 'Services écosystémiques (valeur mesurée)', value: '87 Mrd £', status: 'warning', subtitle: '3% du PIB' },
+                { label: 'Coût réel de l\'effondrement', value: '>>3% du PIB', status: 'critical', subtitle: 'Risques en cascade' },
+            ];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-950 via-red-950 to-slate-950 text-slate-100 p-6">
+                    <div className="max-w-7xl mx-auto">
+                        {/* En-tête principal */}
+                        <div className="text-center mb-12 animate-slide-up">
+                            <div className="inline-flex items-center gap-3 mb-4 px-6 py-3 bg-red-600/20 border border-red-500/50 rounded-full">
+                                <AlertTriangle className="w-6 h-6 text-red-400" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }} />
+                                <span className="text-red-300 font-semibold tracking-wider text-sm uppercase">Évaluation de Sécurité Nationale</span>
+                            </div>
+                            <h1 className="text-5xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-red-200 via-orange-200 to-red-300 bg-clip-text text-transparent leading-tight">
+                                EFFONDREMENT<br/>DES ÉCOSYSTÈMES
+                            </h1>
+                            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
+                                Menace pour la sécurité nationale britannique · Horizon 2030-2050
+                            </p>
+                            <p className="text-sm text-slate-500 mt-2">
+                                Document d'origine : UK National Security Assessment · Global biodiversity loss, ecosystem collapse
+and national security . 2024-2025
+                            </p>
+                            
+                            {/* Disclaimer important */}
+                            <div className="mt-6 max-w-4xl mx-auto p-4 bg-yellow-900/20 border border-yellow-600/40 rounded-lg">
+                                <p className="text-sm text-yellow-200 mb-3">
+                                    <strong>⚠️ Note importante :</strong> Cette visualisation présente un <strong>scénario du pire cas raisonnable</strong>, 
+                                    pas une prédiction. Elle s'appuie sur une consultation de <strong>81 experts</strong> en biodiversité et une revue 
+                                    littéraire extensive pour identifier les risques potentiels.
+                                </p>
+                                <p className="text-xs text-yellow-300 italic border-t border-yellow-600/30 pt-3">
+                                    <strong>💭 Note personnelle :</strong> Étant donné le contexte de diffusion du document source et le fort soupçon d'élagage, 
+                                    il est raisonnable de penser qu'il s'agit ici du "moins pire" des pires cas raisonnables.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Statistiques clés UK */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                            {ukStats.map((stat, idx) => (
+                                <div 
+                                    key={idx}
+                                    className={`stat-card p-6 rounded-xl ${
+                                        stat.status === 'critical' 
+                                            ? 'bg-red-950/40 alert-flash' 
+                                            : 'bg-orange-950/30'
+                                    }`}
+                                >
+                                    <div className={`text-3xl font-bold mb-2 ${
+                                        stat.status === 'critical' ? 'text-red-400' : 'text-orange-400'
+                                    }`}>
+                                        {stat.value}
+                                    </div>
+                                    <div className="text-sm text-slate-400">{stat.label}</div>
+                                    {stat.subtitle && (
+                                        <div className="text-xs text-slate-500 mt-1 italic">{stat.subtitle}</div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Déclin de la biodiversité */}
+                        <div className="grid md:grid-cols-3 gap-6 mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                            <div className="stat-card p-8 rounded-xl bg-gradient-to-br from-red-950/50 to-red-900/30">
+                                <TrendingDown className="w-12 h-12 text-red-400 mb-4" />
+                                <div className="text-5xl font-bold text-red-300 mb-2">-73%</div>
+                                <div className="text-slate-300 text-sm">Populations animales</div>
+                                <div className="text-slate-500 text-xs mt-1">1970-2020</div>
+                            </div>
+                            
+                            <div className="stat-card p-8 rounded-xl bg-gradient-to-br from-orange-950/50 to-orange-900/30">
+                                <Skull className="w-12 h-12 text-orange-400 mb-4" />
+                                <div className="text-5xl font-bold text-orange-300 mb-2">-84%</div>
+                                <div className="text-slate-300 text-sm">Espèces d'eau douce</div>
+                                <div className="text-slate-500 text-xs mt-1">Perte maximale observée</div>
+                            </div>
+                            
+                            <div className="stat-card p-8 rounded-xl bg-gradient-to-br from-yellow-950/50 to-yellow-900/30">
+                                <Globe className="w-12 h-12 text-yellow-400 mb-4" />
+                                <div className="text-5xl font-bold text-yellow-300 mb-2">7/9</div>
+                                <div className="text-slate-300 text-sm">Limites planétaires</div>
+                                <div className="text-slate-500 text-xs mt-1">Seuils franchis (2026)</div>
+                            </div>
+                        </div>
+
+                        {/* Alerte sur le décalage 3% vs risques réels */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+                            <div className="stat-card p-6 rounded-xl bg-gradient-to-r from-red-950/80 to-orange-950/80 border-2 border-orange-500/50">
+                                <div className="flex items-start gap-4">
+                                    <AlertTriangle className="w-8 h-8 text-orange-400 flex-shrink-0 mt-1" />
+                                    <div>
+                                        <h3 className="text-xl font-bold text-orange-300 mb-2">Le paradoxe des 3%</h3>
+                                        <p className="text-slate-300 text-sm mb-3">
+                                            Bien que les services écosystémiques soient évalués à 3% du PIB britannique (87 Mrd £), 
+                                            <strong className="text-orange-200"> l'effondrement de ces systèmes déclencherait des effets en cascade 
+                                            avec des coûts bien supérieurs</strong> : échecs des récoltes → inflation alimentaire → instabilité sociale → 
+                                            migration → conflits. <span className="text-slate-400">[Ajout personnel sur la base des évaluations disponibles : Le coût réel serait probablement bien supérieur (de 10% à 50% du PIB mondial en cas 
+                                            d'inaction à la fin du siècle)]</span>. 
+                                        </p>
+                                        <p className="text-slate-300 text-sm mb-3">
+                                            <strong className="text-orange-200">Contexte global :</strong> Il faudrait les ressources de <strong>1,6 Terre</strong> pour 
+                                            maintenir les niveaux de consommation actuels de l'humanité.
+                                        </p>
+                                        <div className="text-xs text-slate-400 italic">
+                                            Les 3% ne mesurent que la valeur directe en temps normal, pas les risques systémiques d'effondrement.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Écosystèmes critiques */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                            <h2 className="text-3xl font-bold mb-6 text-slate-200">
+                                Écosystèmes Critiques · Trajectoire d'Effondrement
+                            </h2>
+                            <div className="grid md:grid-cols-3 gap-4">
+                                {ecosystems.map((eco, idx) => (
+                                    <div
+                                        key={eco.id}
+                                        onClick={() => setSelectedEcosystem(selectedEcosystem === eco.id ? null : eco.id)}
+                                        className={`ecosystem-card p-6 rounded-xl bg-gradient-to-br ${eco.color} border-4 ${
+                                            selectedEcosystem === eco.id 
+                                                ? 'border-white shadow-xl shadow-white/20' 
+                                                : eco.risk === 'Critique'
+                                                ? 'border-red-500/80'
+                                                : eco.risk === 'Très élevé'
+                                                ? 'border-orange-500/80'
+                                                : 'border-yellow-500/80'
+                                        }`}
+                                    >
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h3 className="text-lg font-bold text-white">{eco.name}</h3>
+                                            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                                                eco.risk === 'Critique' 
+                                                    ? 'bg-red-500 text-white' 
+                                                    : eco.risk === 'Très élevé'
+                                                    ? 'bg-orange-500 text-white'
+                                                    : 'bg-yellow-600 text-white'
+                                            }`}>
+                                                {eco.risk}
+                                            </span>
+                                        </div>
+                                        
+                                        {eco.deforestation && (
+                                            <div className="mb-2 text-sm">
+                                                <div className="flex justify-between text-slate-300 mb-1">
+                                                    <span>Déforestation</span>
+                                                    <span className="font-bold">{eco.deforestation}</span>
+                                                </div>
+                                                <div className="w-full bg-slate-800 rounded-full h-2">
+                                                    <div 
+                                                        className="bg-red-500 h-2 rounded-full" 
+                                                        style={{ width: eco.deforestation }}
+                                                    ></div>
+                                                </div>
+                                                <div className="text-xs text-slate-400 mt-1">
+                                                    Seuil: {eco.threshold}
+                                                </div>
+                                            </div>
+                                        )}
+                                        
+                                        {eco.status && (
+                                            <div className="text-sm text-slate-300 mb-2">
+                                                {eco.status}
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex items-center gap-2 text-xs mt-4">
+                                            <Calendar className="w-4 h-4 text-slate-400" />
+                                            <span className="text-slate-300">Effondrement possible: <strong className="text-white">{eco.collapse}</strong></span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Timeline */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                            <h2 className="text-3xl font-bold mb-6 text-slate-200">Chronologie de la Crise</h2>
+                            <div className="stat-card p-8 rounded-xl bg-slate-900/50 border-l-4 border-red-500">
+                                <div className="space-y-6">
+                                    {timeline.map((item, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className={`timeline-marker pl-8 ${
+                                                item.severity === 'positive' ? 'text-green-400' :
+                                                item.severity === 'critical' ? 'text-red-400' : 'text-orange-400'
+                                            }`}
+                                        >
+                                            <div className="font-bold text-sm mb-1">{item.year}</div>
+                                            <div className="text-slate-300 text-sm">{item.event}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Risques de Sécurité Nationale */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.45s' }}>
+                            <h2 className="text-3xl font-bold mb-6 text-slate-200">
+                                Risques de Sécurité Nationale
+                            </h2>
+                            <div className="grid md:grid-cols-2 gap-4">
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-red-950/60 to-red-900/40 border-l-4 border-red-500">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <AlertTriangle className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-red-300 mb-2">Conflits et Escalade Militaire</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                Compétition pour terres arables, eau et ressources alimentaires. 
+                                                Exacerbation des conflits existants et déclenchement de nouveaux conflits inter-étatiques.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-red-950/60 to-red-900/40 border-l-4 border-red-500">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <Users className="w-6 h-6 text-red-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-red-300 mb-2">Migrations de Masse</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                +1,9% de migration par +1% d'insécurité alimentaire. 
+                                                Déplacements de millions de personnes fuyant sécheresses, famines et catastrophes.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-orange-950/60 to-orange-900/40 border-l-4 border-orange-500">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <Skull className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-orange-300 mb-2">Crime Organisé Grave</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                Contrôle des ressources rares. Trafics (humains, nourriture, médicaments). 
+                                                Exploitation accrue des populations vulnérables.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-orange-950/60 to-orange-900/40 border-l-4 border-orange-500">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <AlertTriangle className="w-6 h-6 text-orange-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-orange-300 mb-2">Acteurs Non-Étatiques</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                Groupes terroristes profitant de l'instabilité. Mercenaires et pseudo-gouvernements. 
+                                                Contrôle territorial sur zones riches en ressources.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-yellow-950/60 to-yellow-900/40 border-l-4 border-yellow-600">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <Globe className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-yellow-300 mb-2">Compétition Géopolitique</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                Course aux dernières terres arables, eaux productives et minéraux critiques. 
+                                                Tensions accrues entre puissances pour sécuriser l'approvisionnement.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-yellow-950/60 to-yellow-900/40 border-l-4 border-yellow-600">
+                                    <div className="flex items-start gap-3 mb-3">
+                                        <TrendingDown className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-yellow-300 mb-2">Risques Pandémiques</h3>
+                                            <p className="text-slate-300 text-sm">
+                                                Maladies zoonotiques nouvelles dues à la dégradation des écosystèmes. 
+                                                Transfert pathogènes animal-humain facilité par les migrations.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Chaîne causale - Effets en cascade */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.47s' }}>
+                            <h2 className="text-3xl font-bold mb-6 text-slate-200">
+                                Effets en Cascade : De l'Écosystème à la Crise Sécuritaire
+                            </h2>
+                            <div className="stat-card p-8 rounded-xl bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-2 border-red-500/30">
+                                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                    <div className="flex-1 text-center p-4 bg-emerald-900/40 rounded-lg border-2 border-emerald-600/50">
+                                        <div className="text-2xl font-bold text-emerald-300 mb-2">🌳</div>
+                                        <div className="text-sm font-semibold text-emerald-200 mb-1">Écosystème</div>
+                                        <div className="text-xs text-slate-400">Forêt tropicale</div>
+                                    </div>
+                                    
+                                    <div className="text-red-400 text-2xl">→</div>
+                                    
+                                    <div className="flex-1 text-center p-4 bg-red-900/40 rounded-lg border-2 border-red-600/50">
+                                        <div className="text-2xl font-bold text-red-300 mb-2">💥</div>
+                                        <div className="text-sm font-semibold text-red-200 mb-1">Effondrement</div>
+                                        <div className="text-xs text-slate-400">Déforestation 20%+</div>
+                                    </div>
+                                    
+                                    <div className="text-red-400 text-2xl">→</div>
+                                    
+                                    <div className="flex-1 text-center p-4 bg-orange-900/40 rounded-lg border-2 border-orange-600/50">
+                                        <div className="text-2xl font-bold text-orange-300 mb-2">💧</div>
+                                        <div className="text-sm font-semibold text-orange-200 mb-1">Impacts Directs</div>
+                                        <div className="text-xs text-slate-400">Sécheresse, échec récoltes</div>
+                                    </div>
+                                    
+                                    <div className="text-red-400 text-2xl">→</div>
+                                    
+                                    <div className="flex-1 text-center p-4 bg-yellow-900/40 rounded-lg border-2 border-yellow-600/50">
+                                        <div className="text-2xl font-bold text-yellow-300 mb-2">🌾</div>
+                                        <div className="text-sm font-semibold text-yellow-200 mb-1">Pénuries</div>
+                                        <div className="text-xs text-slate-400">Insécurité alimentaire</div>
+                                    </div>
+                                    
+                                    <div className="text-red-400 text-2xl">→</div>
+                                    
+                                    <div className="flex-1 text-center p-4 bg-red-950/60 rounded-lg border-2 border-red-500">
+                                        <div className="text-2xl font-bold text-red-300 mb-2">⚔️</div>
+                                        <div className="text-sm font-semibold text-red-200 mb-1">Crise Sécuritaire</div>
+                                        <div className="text-xs text-slate-400">Migration, conflits</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-6 p-4 bg-slate-800/50 rounded-lg">
+                                    <p className="text-sm text-slate-300 text-center mb-3">
+                                        <strong className="text-orange-300">Exemple réel :</strong> Amérique centrale (2012-2018) — 
+                                        Maladie du café + sécheresse → perte 60%-100% des récoltes → 373 000 déplacés → migration vers USA
+                                    </p>
+                                    <p className="text-sm text-slate-300 text-center">
+                                        <strong className="text-orange-300">Cascade géopolitique :</strong> Russie (2010) — 
+                                        Canicule + sécheresse → -17% récolte blé → interdiction export → hausse prix mondiale → 
+                                        pauvreté accrue UK + instabilité Égypte/Tunisie/Mozambique → contribution au Printemps Arabe 2011
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Impacts et niveaux de confiance */}
+                        <div className="grid md:grid-cols-2 gap-6 mb-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                            <div className="stat-card p-8 rounded-xl bg-slate-900/50">
+                                <h3 className="text-2xl font-bold mb-6 text-slate-200">Impacts Majeurs</h3>
+                                <div className="space-y-4">
+                                    {impacts.map((impact, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                                <impact.icon className="w-6 h-6 text-red-400" />
+                                                <span className="text-slate-200">{impact.label}</span>
+                                            </div>
+                                            <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                                                impact.confidence === 'Élevée' 
+                                                    ? 'bg-red-600/30 text-red-300 border border-red-500/50'
+                                                    : 'bg-orange-600/30 text-orange-300 border border-orange-500/50'
+                                            }`}>
+                                                {impact.confidence}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="stat-card p-8 rounded-xl bg-slate-900/50">
+                                <h3 className="text-2xl font-bold mb-6 text-slate-200">Niveaux de Confiance</h3>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-red-900/30 border border-red-700/50 rounded-lg">
+                                        <div className="text-sm font-bold text-red-300 mb-2">ÉLEVÉE</div>
+                                        <div className="text-xs text-slate-300 mb-1">Dégradation des écosystèmes · Impacts biologiques</div>
+                                        <div className="text-xs text-slate-400 italic">
+                                            Grande base scientifique, souvent révisée. Confiance élevée que chaque écosystème critique se dégrade.
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-orange-900/30 border border-orange-700/50 rounded-lg">
+                                        <div className="text-sm font-bold text-orange-300 mb-2">MODÉRÉE</div>
+                                        <div className="text-xs text-slate-300 mb-1">Coûts humains · Risques sécuritaires</div>
+                                        <div className="text-xs text-slate-400 italic">
+                                            Résilience des systèmes humains incertaine. Contexte géopolitique 2030-2050 très incertain.
+                                        </div>
+                                    </div>
+                                    <div className="p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                                        <div className="text-sm font-bold text-yellow-300 mb-2">FAIBLE</div>
+                                        <div className="text-xs text-slate-300 mb-1">Calendrier exact · Trajectoires précises</div>
+                                        <div className="text-xs text-slate-400 italic">
+                                            Multiples facteurs impliqués, boucles de rétroaction complexes, manque de données (ex: Congo). 
+                                            Seuils pourraient être plus proches ou plus loin que prévu.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section Solutions */}
+                        <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.55s' }}>
+                            <h2 className="text-3xl font-bold mb-6 text-slate-200">
+                                Solutions et Actions Possibles
+                            </h2>
+                            
+                            {/* Cadre Kunming-Montréal */}
+                            <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-green-950/50 to-emerald-900/40 border-2 border-green-600/50 mb-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="text-4xl">🌍</div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-green-300 mb-2">
+                                            Cadre de Kunming-Montréal (2022)
+                                        </h3>
+                                        <p className="text-slate-300 text-sm mb-3">
+                                            Accord international pour <strong className="text-green-200">"stopper et inverser la perte de biodiversité d'ici 2030"</strong>
+                                        </p>
+                                        <div className="grid md:grid-cols-2 gap-3 text-sm">
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">Protéger 30% des terres et océans d'ici 2030</span>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">30% de la nature en restauration d'ici 2030</span>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">Mobiliser 700 milliards $ de financement</span>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">Réduire pesticides de 50% d'ici 2050</span>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">Réformer 500 milliards $ de subventions néfastes/an</span>
+                                            </div>
+                                            <div className="flex items-start gap-2">
+                                                <span className="text-green-400">✓</span>
+                                                <span className="text-slate-300">Limiter réchauffement à 1,5°C (Paris)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Exemple Malawi */}
+                            <div className="stat-card p-6 rounded-xl bg-gradient-to-br from-blue-950/50 to-blue-900/40 border-2 border-blue-600/50">
+                                <div className="flex items-start gap-4">
+                                    <div className="text-4xl">🌱</div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-blue-300 mb-2">
+                                            Exemple réussi : Malawi
+                                        </h3>
+                                        <p className="text-slate-300 text-sm mb-3">
+                                            La restauration d'écosystèmes améliore concrètement la résilience sociétale
+                                        </p>
+                                        <div className="grid md:grid-cols-2 gap-3 text-sm">
+                                            <div className="text-slate-300">
+                                                <strong className="text-blue-300">20 millions</strong> d'arbres plantés
+                                            </div>
+                                            <div className="text-slate-300">
+                                                <strong className="text-blue-300">42 000 hectares</strong> de terres réhabilitées
+                                            </div>
+                                            <div className="text-slate-300">
+                                                <strong className="text-blue-300">500 000</strong> résidents soutenus
+                                            </div>
+                                            <div className="text-slate-300">
+                                                <strong className="text-blue-300">-60%</strong> dépendance aide humanitaire
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-400 italic mt-3">
+                                            Protéger et restaurer les écosystèmes = plus facile, moins cher et plus fiable que les solutions technologiques
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Note faisabilité restauration */}
+                            <div className="mt-6 p-4 bg-slate-800/50 border-l-4 border-blue-500 rounded-lg">
+                                <p className="text-sm text-slate-300">
+                                    <strong className="text-blue-300">⚖️ Faisabilité de restauration :</strong> La restauration des 
+                                    <strong className="text-green-300"> forêts tropicales</strong> est plus facile que celle des 
+                                    <strong className="text-orange-300"> récifs coralliens</strong> ou de 
+                                    <strong className="text-slate-300"> l'Himalaya</strong>. 
+                                    Prioriser les écosystèmes restaurables maximise l'impact des efforts.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Conclusion */}
+                        <div className="stat-card p-8 rounded-xl bg-gradient-to-r from-red-950/60 to-orange-950/60 border-2 border-red-500/50 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+                            <div className="text-center">
+                                <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                                <h3 className="text-2xl font-bold text-red-200 mb-4">
+                                    Sans intervention majeure immédiate
+                                </h3>
+                                <p className="text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                                    L'effondrement des écosystèmes menace directement la sécurité nationale britannique, 
+                                    la sécurité alimentaire et la stabilité géopolitique mondiale dans les décennies à venir.
+                                </p>
+                                <div className="mt-6 text-sm text-slate-400">
+                                    Source: UK National Security Assessment · 2024-2025
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Rendu de l'application
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<BiodiversityCrisisViz />);
+    </script>
+</body>
+</html>
